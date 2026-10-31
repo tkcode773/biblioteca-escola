@@ -13,7 +13,11 @@ import { initialBooks } from "@/lib/books";
 import type { Book } from "@/types/book";
 import type { UserRole } from "@/types/user";
 
-const BOOKS_KEY = "biblioteca:books:v1";
+// v2: o acervo de exemplo mudou (capas corretas dos livros), então a chave foi
+// versionada. Sem isso, quem já visitou o site continuaria com o acervo antigo
+// guardado no navegador — com as capas erradas.
+const BOOKS_KEY = "biblioteca:books:v2";
+const BOOKS_KEY_ANTIGA = "biblioteca:books:v1";
 const USERS_KEY = "biblioteca:users:v1";
 const SESSION_KEY = "biblioteca:session:v1";
 
@@ -64,12 +68,27 @@ function writeJSON(key: string, value: unknown): void {
 
 export function getBooks(): Book[] {
   const stored = readJSON<Book[] | null>(BOOKS_KEY, null);
-  if (!stored || stored.length === 0) {
-    // Primeira visita: semeia com o acervo de exemplo.
-    writeJSON(BOOKS_KEY, initialBooks);
-    return [...initialBooks];
+  if (stored && stored.length > 0) return stored;
+
+  // Primeira visita (ou migração do acervo antigo): começa do acervo de exemplo.
+  // Livros que o usuário cadastrou por conta própria são preservados, mas os
+  // registros antigos de exemplo são trocados pelos novos (capas corretas).
+  const antigo = readJSON<Book[] | null>(BOOKS_KEY_ANTIGA, null);
+  const idsDoExemplo = new Set(initialBooks.map((b) => b.id));
+  const adicionadosPeloUsuario = (antigo ?? []).filter((b) => !idsDoExemplo.has(b.id));
+
+  const acervo = [...initialBooks, ...adicionadosPeloUsuario];
+  writeJSON(BOOKS_KEY, acervo);
+
+  if (hasStorage()) {
+    try {
+      window.localStorage.removeItem(BOOKS_KEY_ANTIGA);
+    } catch {
+      /* ignora */
+    }
   }
-  return stored;
+
+  return acervo;
 }
 
 export function saveBooks(books: Book[]): void {
