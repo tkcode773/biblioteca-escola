@@ -2,29 +2,51 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 
-const EQUIPE = [
+type Integrante = {
+  nome: string;
+  funcao: string;
+  bio: string;
+  cor: string;
+  /** Quando existir, usa a foto de public/equipe/. Sem ela, usa as iniciais. */
+  foto?: string;
+};
+
+const EQUIPE: Integrante[] = [
   {
-    nome: "Integrante 1",
+    nome: "Manoel Carlos",
     funcao: "Front-end e design",
     bio: "Responsável pelas telas, pela identidade visual e pela experiência de quem usa o site.",
     cor: "#3b82f6",
-    iniciais: "I1",
   },
   {
-    nome: "Integrante 2",
-    funcao: "Dados e cadastro",
-    bio: "Cuida do acervo, das regras de empréstimo e da validação do controle de acesso.",
+    nome: "Victor Gabriel",
+    funcao: "Back-end e dados",
+    bio: "Cuida do acervo, das regras de empréstimo e da estrutura de dados da biblioteca.",
     cor: "#0ea5e9",
-    iniciais: "I2",
   },
   {
-    nome: "Integrante 3",
-    funcao: "Testes e documentação",
-    bio: "Testa as funcionalidades, revisa os textos e organiza a documentação do projeto.",
+    nome: "Bárbara Rafaely",
+    funcao: "Interface e testes",
+    bio: "Revisa a usabilidade das telas e testa as funcionalidades antes de cada entrega.",
     cor: "#6366f1",
-    iniciais: "I3",
+  },
+  {
+    nome: "Gustavo Fernandes",
+    funcao: "Documentação e apresentação",
+    bio: "Organiza a documentação do projeto e prepara a apresentação para a banca.",
+    cor: "#8b5cf6",
   },
 ];
+
+/** Iniciais do nome: "Manoel Carlos" -> "MC" */
+function iniciais(nome: string): string {
+  return nome
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 export default function TeamPage() {
   return (
@@ -40,23 +62,33 @@ export default function TeamPage() {
             Nossa equipe
           </h1>
           <p className="mt-3 text-[#64748b]">
-            Somos estudantes do curso técnico e desenvolvemos esta biblioteca online como projeto
-            da disciplina — do levantamento dos requisitos até a publicação na Vercel.
+            Somos estudantes do curso técnico e desenvolvemos esta biblioteca online como projeto da
+            disciplina — do levantamento dos requisitos até a publicação na Vercel.
           </p>
         </header>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {EQUIPE.map((p) => (
             <article
               key={p.nome}
               className="rounded-2xl border border-[#e2e8f0] bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
             >
-              <div
-                className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl text-2xl font-bold text-white shadow-sm"
-                style={{ background: p.cor }}
-              >
-                {p.iniciais}
-              </div>
+              {p.foto ? (
+                <img
+                  src={p.foto}
+                  alt={`Foto de ${p.nome}`}
+                  className="mx-auto h-20 w-20 rounded-2xl object-cover shadow-sm ring-2 ring-[#eff6ff]"
+                />
+              ) : (
+                <div
+                  aria-hidden="true"
+                  className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl text-2xl font-bold text-white shadow-sm"
+                  style={{ background: p.cor }}
+                >
+                  {iniciais(p.nome)}
+                </div>
+              )}
+
               <h2 className="mt-4 text-lg font-bold text-[#1e293b]">{p.nome}</h2>
               <p className="text-sm font-semibold text-[#1d4ed8]">{p.funcao}</p>
               <p className="mt-2 text-sm leading-relaxed text-[#64748b]">{p.bio}</p>
@@ -76,11 +108,10 @@ export default function TeamPage() {
               empréstimo e quem retirou.
             </li>
             <li>
-              • Controle de acesso com login, cadastro e validação de nome, email e senha.
+              • Controle de acesso com login, cadastro e validação de nome, email e senha — somente
+              administradores gerenciam o acervo.
             </li>
-            <li>
-              • Painel administrativo para cadastrar, editar e excluir livros.
-            </li>
+            <li>• Painel administrativo para cadastrar, editar e excluir livros.</li>
             <li>• Desenvolvido em Next.js e publicado na Vercel.</li>
           </ul>
 
