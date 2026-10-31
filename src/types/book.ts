@@ -21,6 +21,7 @@ export type Book = {
 export const CATEGORIES = [
   "Ficção",
   "Conto",
+  "Clássicos",
   "Poesia",
   "Truques",
   "Biografia",

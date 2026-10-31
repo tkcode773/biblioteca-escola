@@ -1,117 +1,96 @@
 // src/app/(pages)/search/page.tsx
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookCard } from "@/components/BookCard";
-import { searchBooks, getBooks, getBooksByCategory } from "@/lib/store";
+import { useSearchParams } from "next/navigation";
+import { getBooks } from "@/lib/store";
+import { initialBooks } from "@/lib/books";
+import { SiteHeader } from "@/components/SiteHeader";
+import { BookPoster } from "@/components/BookPoster";
 import type { Book } from "@/types/book";
 
-function SearchContent() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [ready, setReady] = useState(false);
+function Resultados() {
+  const [books, setBooks] = useState<Book[]>(initialBooks);
+  const [pronto, setPronto] = useState(false);
   const searchParams = useSearchParams();
 
-  const query = searchParams.get("q") || "";
-  const category = searchParams.get("category") || "";
+  const termo = searchParams.get("q")?.trim() ?? "";
 
   useEffect(() => {
-    // localStorage só existe no navegador — lê depois de montar.
-    let result: Book[];
-    if (category) {
-      result = getBooksByCategory(category);
-      if (query) {
-        const q = query.toLowerCase();
-        result = result.filter(
-          (b) =>
-            b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)
-        );
-      }
-    } else if (query) {
-      result = searchBooks(query);
-    } else {
-      result = getBooks();
-    }
+    setBooks(getBooks());
+    setPronto(true);
+  }, []);
 
-    setBooks(result);
-    setReady(true);
-  }, [query, category]);
-
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const q = formData.get("q") as string;
-    if (q && q.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(q.trim())}`;
-    }
-  };
+  const resultados = useMemo(() => {
+    if (!termo) return books;
+    const q = termo.toLowerCase();
+    return books.filter(
+      (b) =>
+        b.title.toLowerCase().includes(q) ||
+        b.author.toLowerCase().includes(q) ||
+        b.category.toLowerCase().includes(q)
+    );
+  }, [books, termo]);
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
-          <Link href="/" className="font-bold text-lg text-zinc-800">
-            📚 Biblioteca Escolar
-          </Link>
-          <div className="flex flex-1 items-center gap-2 max-w-md">
-            <form onSubmit={handleSearch} className="flex items-center gap-2">
-              <input
-                name="q"
-                defaultValue={query}
-                placeholder="Buscar livros..."
-                className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm"
-              >
-                Buscar
-              </button>
-            </form>
-          </div>
-        </div>
+    <main className="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-[#1e293b] sm:text-3xl">
+          {termo ? (
+            <>
+              Resultados para <span className="text-[#1d4ed8]">“{termo}”</span>
+            </>
+          ) : (
+            "Todo o acervo"
+          )}
+        </h1>
+        <p className="mt-1 text-sm text-[#64748b]">
+          {!pronto
+            ? "Buscando..."
+            : `${resultados.length} ${resultados.length === 1 ? "livro" : "livros"} encontrado${
+                resultados.length === 1 ? "" : "s"
+              }`}
+        </p>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-zinc-800">
-            {query ? `Resultados para "${query}"` : "Catálogo de Livros"}
-          </h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            {!ready
-              ? "Carregando..."
-              : `${books.length} livro${books.length !== 1 ? "s" : ""} encontrado${books.length !== 1 ? "s" : ""}`}
+      {pronto && resultados.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white py-16 text-center">
+          <p className="text-lg font-semibold text-[#475569]">Nada encontrado</p>
+          <p className="mt-1 text-sm text-[#94a3b8]">
+            Tente outro título, autor ou categoria.
           </p>
+          <Link
+            href="/catalog"
+            className="mt-5 inline-block rounded-full bg-[#3b82f6] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2563eb]"
+          >
+            Ver catálogo completo
+          </Link>
         </div>
-
-        {ready && books.length === 0 ? (
-          <div className="text-center py-12 text-zinc-500">
-            <p className="text-lg">Nenhum livro encontrado.</p>
-            <p className="text-sm mt-1">Tente buscar por outro termo.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {books.map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {resultados.map((book) => (
+            <BookPoster key={book.id} book={book} fluid />
+          ))}
+        </div>
+      )}
+    </main>
   );
 }
 
 export default function SearchPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center text-zinc-400">
-          Carregando...
-        </div>
-      }
-    >
-      <SearchContent />
-    </Suspense>
+    <div className="min-h-screen bg-[#f0f4f8]">
+      <SiteHeader ativo="/catalog" />
+      <Suspense
+        fallback={
+          <div className="flex min-h-[50vh] items-center justify-center text-[#94a3b8]">
+            Buscando...
+          </div>
+        }
+      >
+        <Resultados />
+      </Suspense>
+    </div>
   );
 }

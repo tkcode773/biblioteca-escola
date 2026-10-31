@@ -1,7 +1,8 @@
 // Acervo inicial da biblioteca (dados de exemplo / seed).
+// As capas são imagens reais do Open Library (covers.openlibrary.org).
 // É gravado no navegador (localStorage) na primeira visita — ver src/lib/store.ts
 
-import type { Book, Category } from "@/types/book";
+import type { Book } from "@/types/book";
 
 export const initialBooks: Book[] = [
   {
@@ -10,9 +11,8 @@ export const initialBooks: Book[] = [
     author: "George Orwell",
     category: "Ficção",
     year: 1945,
-    description:
-      "Uma fábula sobre uma fazenda de animais que pode ser lida como crítica à ditadura e à corrupção do poder.",
-    cover: "https://covers.openlibrary.org/b/id/1234567-L.jpg",
+    description: "Uma fábula sobre uma fazenda de animais que se rebela contra o dono — e descobre que o poder pode corromper qualquer um.",
+    cover: "https://covers.openlibrary.org/b/id/11261770-L.jpg",
     available: true,
   },
   {
@@ -21,9 +21,8 @@ export const initialBooks: Book[] = [
     author: "Antoine de Saint-Exupéry",
     category: "Conto",
     year: 1943,
-    description:
-      "Uma história atemporal sobre uma criança que viaja entre planetas, aprendendo sobre amor, amizade e responsabilidade.",
-    cover: "https://covers.openlibrary.org/b/id/7890123-L.jpg",
+    description: "Um piloto cai no deserto e encontra um menino vindo de outro planeta, que ensina sobre amizade, amor e o que é realmente importante.",
+    cover: "https://covers.openlibrary.org/b/id/10708272-L.jpg",
     available: false,
     loanDate: "10/09/2026",
     borrowedBy: "Sala de Leituras",
@@ -34,9 +33,8 @@ export const initialBooks: Book[] = [
     author: "Machado de Assis",
     category: "Ficção",
     year: 1899,
-    description:
-      "Clássico do romance brasileiro sobre um homem que busca explicar o passado e descobrir a verdade sobre sua vida.",
-    cover: "https://covers.openlibrary.org/b/id/4567890-L.jpg",
+    description: "Bentinho narra sua vida e o ciúme que o consome: Capitu traiu ou não traiu? O clássico mais discutido da literatura brasileira.",
+    cover: "https://covers.openlibrary.org/b/id/647501-L.jpg",
     available: true,
   },
   {
@@ -45,9 +43,8 @@ export const initialBooks: Book[] = [
     author: "Dante Alighieri",
     category: "Clássicos",
     year: 1320,
-    description:
-      "Épica que segue o viajante através do Inferno, Purgatório e Paraíso, simbolizando a jornada do homem em direção à sabedoria.",
-    cover: "https://covers.openlibrary.org/b/id/9876543-L.jpg",
+    description: "A jornada de Dante pelo Inferno, Purgatório e Paraíso, guiada por Virgílio e Beatriz — uma das obras fundadoras do Ocidente.",
+    cover: "https://covers.openlibrary.org/b/id/11621024-L.jpg",
     available: false,
     loanDate: "22/09/2026",
     borrowedBy: "Acervo Reservado",
@@ -58,9 +55,8 @@ export const initialBooks: Book[] = [
     author: "George Orwell",
     category: "Ficção",
     year: 1949,
-    description:
-      "Distopia que retrata um futuro sob um regime totalitário, explorando temas de vigilância, controle e liberdade individual.",
-    cover: "https://covers.openlibrary.org/b/id/3456789-L.jpg",
+    description: "Em um mundo vigiado pelo Grande Irmão, Winston tenta preservar a memória e a verdade. A distopia mais influente de todos os tempos.",
+    cover: "https://covers.openlibrary.org/b/id/9267242-L.jpg",
     available: true,
   },
   {
@@ -69,9 +65,8 @@ export const initialBooks: Book[] = [
     author: "Malba Tahan",
     category: "Truques",
     year: 1949,
-    description:
-      "Contos matemáticos que misturam entretenimento e ensino, apresentando problemas de lógica com soluções criativas.",
-    cover: "https://covers.openlibrary.org/b/id/2345678-L.jpg",
+    description: "As aventuras do calculista persa Beremiz Samir, que resolve enigmas matemáticos com esperteza e poesia.",
+    cover: "https://covers.openlibrary.org/b/id/6828127-L.jpg",
     available: true,
   },
   {
@@ -80,45 +75,156 @@ export const initialBooks: Book[] = [
     author: "Gabriel García Márquez",
     category: "Ficção",
     year: 1967,
-    description:
-      "A história da família Buendía ao longo de sete gerações na pequena vila de Macondo, misturando real e onírico.",
-    cover: "https://covers.openlibrary.org/b/id/1111111-L.jpg",
+    description: "Sete gerações da família Buendía na cidade de Macondo, onde o real e o fantástico caminham juntos.",
+    cover: "https://covers.openlibrary.org/b/id/12627383-L.jpg",
     available: false,
     loanDate: "03/10/2026",
     borrowedBy: "Laboratório de IA",
   },
   {
     id: "b008",
-    title: "O Pequeno Príncipe (Edição Ilustrada)",
-    author: "Antoine de Saint-Exupéry",
+    title: "O Cortiço",
+    author: "Aluísio Azevedo",
+    category: "Ficção",
+    year: 1890,
+    description: "A vida em uma habitação coletiva do Rio de Janeiro, onde o ambiente molda o destino de quem vive ali.",
+    cover: "https://covers.openlibrary.org/b/id/8176059-L.jpg",
+    available: true,
+  },
+  {
+    id: "b009",
+    title: "Vidas Secas",
+    author: "Graciliano Ramos",
+    category: "Ficção",
+    year: 1938,
+    description: "Fabiano e sua família atravessam o sertão fugindo da seca, em uma das obras mais secas e potentes da literatura brasileira.",
+    cover: "https://covers.openlibrary.org/b/id/12369687-L.jpg",
+    available: true,
+  },
+  {
+    id: "b010",
+    title: "Capitães da Areia",
+    author: "Jorge Amado",
+    category: "Ficção",
+    year: 1937,
+    description: "Um grupo de meninos abandonados vive de pequenos furtos nas ruas de Salvador — e sonha com uma vida diferente.",
+    cover: "https://covers.openlibrary.org/b/id/13618178-L.jpg",
+    available: false,
+    loanDate: "28/09/2026",
+    borrowedBy: "Sala 12",
+  },
+  {
+    id: "b011",
+    title: "Memórias Póstumas de Brás Cubas",
+    author: "Machado de Assis",
+    category: "Ficção",
+    year: 1881,
+    description: "Um defunto narra sua própria vida com ironia fina, inaugurando o realismo brasileiro.",
+    cover: "https://covers.openlibrary.org/b/id/123152-L.jpg",
+    available: true,
+  },
+  {
+    id: "b012",
+    title: "Orgulho e Preconceito",
+    author: "Jane Austen",
+    category: "Ficção",
+    year: 1813,
+    description: "Elizabeth Bennet e o orgulhoso Mr. Darcy medem forças em uma das comédias de costumes mais amadas de todos os tempos.",
+    cover: "https://covers.openlibrary.org/b/id/14348537-L.jpg",
+    available: true,
+  },
+  {
+    id: "b013",
+    title: "Iracema",
+    author: "José de Alencar",
+    category: "Ficção",
+    year: 1865,
+    description: "A história da virgem dos lábios de mel e do guerreiro branco — o romance fundador do indianismo brasileiro.",
+    cover: "https://covers.openlibrary.org/b/id/2664651-L.jpg",
+    available: true,
+  },
+  {
+    id: "b014",
+    title: "Alice no País das Maravilhas",
+    author: "Lewis Carroll",
     category: "Conto",
-    year: 1943,
-    description:
-      "Edição ilustrada com capas coloridas e notas adicionais que enriquecem a experiência de leitura do clássico.",
-    cover: "https://covers.openlibrary.org/b/id/9999999-L.jpg",
+    year: 1865,
+    description: "Alice cai na toca do coelho e encontra um mundo onde nada faz sentido — e onde o absurdo tem suas próprias regras.",
+    cover: "https://covers.openlibrary.org/b/id/10527843-L.jpg",
+    available: true,
+  },
+  {
+    id: "b015",
+    title: "A Metamorfose",
+    author: "Franz Kafka",
+    category: "Conto",
+    year: 1915,
+    description: "Gregor Samsa acorda transformado em um inseto gigante, e sua família precisa lidar com o que ele se tornou.",
+    cover: "https://covers.openlibrary.org/b/id/12820198-L.jpg",
+    available: false,
+    loanDate: "12/10/2026",
+    borrowedBy: "Sala de Leituras",
+  },
+  {
+    id: "b016",
+    title: "Peter Pan",
+    author: "J. M. Barrie",
+    category: "Conto",
+    year: 1911,
+    description: "O menino que não queria crescer leva Wendy e seus irmãos para a Terra do Nunca, onde há piratas e fadas.",
+    cover: "https://covers.openlibrary.org/b/id/8237052-L.jpg",
+    available: true,
+  },
+  {
+    id: "b017",
+    title: "A Odisseia",
+    author: "Homero",
+    category: "Clássicos",
+    year: -800,
+    description: "Dez anos de viagens de Odisseu para voltar a Ítaca, enfrentando ciclopes, sereias e a fúria dos deuses.",
+    cover: "https://covers.openlibrary.org/b/id/9045853-L.jpg",
+    available: true,
+  },
+  {
+    id: "b018",
+    title: "O Príncipe",
+    author: "Nicolau Maquiavel",
+    category: "Clássicos",
+    year: 1532,
+    description: "O tratado que separou a política da moral e até hoje é lido por quem quer entender o poder.",
+    cover: "https://covers.openlibrary.org/b/id/12726168-L.jpg",
+    available: true,
+  },
+  {
+    id: "b019",
+    title: "A Arte da Guerra",
+    author: "Sun Tzu",
+    category: "Clássicos",
+    year: -500,
+    description: "Treze capítulos sobre estratégia escritos há mais de dois mil anos, usados até hoje em negócios e esportes.",
+    cover: "https://covers.openlibrary.org/b/id/9054486-L.jpg",
+    available: false,
+    loanDate: "05/10/2026",
+    borrowedBy: "Sala 8",
+  },
+  {
+    id: "b020",
+    title: "A Origem das Espécies",
+    author: "Charles Darwin",
+    category: "Ciência",
+    year: 1859,
+    description: "O livro que mudou a forma como a humanidade entende a vida, apresentando a seleção natural.",
+    cover: "https://covers.openlibrary.org/b/id/7153600-L.jpg",
+    available: true,
+  },
+  {
+    id: "b021",
+    title: "Poemas Completos de Alberto Caeiro",
+    author: "Fernando Pessoa",
+    category: "Poesia",
+    year: 1946,
+    description: "Os versos do mestre dos heterônimos de Pessoa, o poeta que dizia preferir as coisas como elas são.",
+    cover: "https://covers.openlibrary.org/b/id/2114523-L.jpg",
     available: true,
   },
 ];
-
-export function getBooks(): Book[] {
-  return [...initialBooks];
-}
-
-export function getBooksByCategory(category: Category): Book[] {
-  return initialBooks.filter((b) => b.category === category);
-}
-
-export function searchBooks(query: string): Book[] {
-  const q = query.toLowerCase().trim();
-  if (!q) return [...initialBooks];
-  return initialBooks.filter(
-    (b) =>
-      b.title.toLowerCase().includes(q) ||
-      b.author.toLowerCase().includes(q) ||
-      b.category.toLowerCase().includes(q)
-  );
-}
-
-export function getBookById(id: string): Book | undefined {
-  return initialBooks.find((b) => b.id === id);
-}

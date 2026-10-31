@@ -1,11 +1,21 @@
 // src/app/dashboard/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getBooks, addBook, updateBook, deleteBook, resetBooks } from "@/lib/store";
-import { getSession, clearSession, type SessionUser } from "@/lib/store";
+import { useRouter } from "next/navigation";
+import {
+  getBooks,
+  addBook,
+  updateBook,
+  deleteBook,
+  resetBooks,
+  getSession,
+  clearSession,
+  type SessionUser,
+} from "@/lib/store";
+import { SiteHeader } from "@/components/SiteHeader";
+import { formatYear } from "@/lib/format";
 import { CATEGORIES } from "@/types/book";
 import type { Book } from "@/types/book";
 
@@ -21,7 +31,7 @@ type FormState = {
   borrowedBy: string;
 };
 
-const EMPTY_FORM: FormState = {
+const FORM_VAZIO: FormState = {
   title: "",
   author: "",
   category: "",
@@ -35,308 +45,297 @@ const EMPTY_FORM: FormState = {
 
 export default function DashboardPage() {
   const [books, setBooks] = useState<Book[]>([]);
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<FormState>(EMPTY_FORM);
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [pronto, setPronto] = useState(false);
+  const [erro, setErro] = useState("");
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(FORM_VAZIO);
+  const [usuario, setUsuario] = useState<SessionUser | null>(null);
+  const [busca, setBusca] = useState("");
   const router = useRouter();
 
-  const refresh = () => setBooks(getBooks());
+  const recarregar = () => setBooks(getBooks());
 
   useEffect(() => {
-    setUser(getSession());
-    refresh();
+    setUsuario(getSession());
+    recarregar();
     // Next 16 (Cache Components): não ler `new Date()` durante o prerender.
-    setFormData((f) => ({ ...f, year: new Date().getFullYear() }));
-    setReady(true);
+    setForm((f) => ({ ...f, year: new Date().getFullYear() }));
+    setPronto(true);
   }, []);
 
-  const resetForm = (year = new Date().getFullYear()) =>
-    setFormData({ ...EMPTY_FORM, year });
+  const limparForm = (ano = new Date().getFullYear()) => setForm({ ...FORM_VAZIO, year: ano });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const salvar = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setErro("");
 
-    if (!formData.title.trim() || !formData.author.trim() || !formData.category) {
-      setError("Título, autor e categoria são obrigatórios.");
+    if (!form.title.trim() || !form.author.trim() || !form.category) {
+      setErro("Título, autor e categoria são obrigatórios.");
       return;
     }
 
-    const payload: Omit<Book, "id" | "createdAt"> = {
-      title: formData.title.trim(),
-      author: formData.author.trim(),
-      category: formData.category,
-      year: formData.year,
-      description: formData.description.trim(),
-      cover: formData.cover.trim(),
-      available: formData.available,
-      loanDate: formData.available ? undefined : formData.loanDate.trim(),
-      borrowedBy: formData.available ? undefined : formData.borrowedBy.trim(),
+    const dados: Omit<Book, "id" | "createdAt"> = {
+      title: form.title.trim(),
+      author: form.author.trim(),
+      category: form.category,
+      year: Number(form.year) || new Date().getFullYear(),
+      description: form.description.trim(),
+      cover: form.cover.trim(),
+      available: form.available,
+      loanDate: form.available ? undefined : form.loanDate.trim(),
+      borrowedBy: form.available ? undefined : form.borrowedBy.trim(),
     };
 
-    if (editingId) {
-      updateBook(editingId, payload);
-    } else {
-      addBook(payload);
-    }
+    if (editandoId) updateBook(editandoId, dados);
+    else addBook(dados);
 
-    setShowForm(false);
-    setEditingId(null);
-    resetForm();
-    refresh();
+    setMostrarForm(false);
+    setEditandoId(null);
+    limparForm();
+    recarregar();
   };
 
-  const handleEdit = (book: Book) => {
-    setEditingId(book.id);
-    setFormData({
-      title: book.title,
-      author: book.author,
-      category: book.category,
-      year: book.year,
-      description: book.description,
-      cover: book.cover,
-      available: book.available,
-      loanDate: book.loanDate ?? "",
-      borrowedBy: book.borrowedBy ?? "",
+  const editar = (b: Book) => {
+    setEditandoId(b.id);
+    setForm({
+      title: b.title,
+      author: b.author,
+      category: b.category,
+      year: b.year,
+      description: b.description,
+      cover: b.cover,
+      available: b.available,
+      loanDate: b.loanDate ?? "",
+      borrowedBy: b.borrowedBy ?? "",
     });
-    setShowForm(true);
+    setMostrarForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = (id: string) => {
+  const excluir = (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este livro?")) return;
     deleteBook(id);
-    refresh();
+    recarregar();
   };
 
-  const handleLogout = () => {
+  const sair = () => {
     clearSession();
     router.push("/");
     router.refresh();
   };
 
-  if (!ready) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-zinc-400">Carregando...</div>
-      </div>
-    );
-  }
+  const filtrados = books.filter((b) => {
+    const q = busca.toLowerCase().trim();
+    if (!q) return true;
+    return b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q);
+  });
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="font-bold text-lg text-zinc-800">
-            📚 Biblioteca Escolar
-          </Link>
-          <div className="flex items-center gap-3">
-            {user && (
-              <span className="hidden sm:inline text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700">
-                {user.name} · {user.role}
-              </span>
-            )}
-            <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-800">
-              Voltar
-            </Link>
-            {user && (
+    <div className="min-h-screen bg-[#f0f4f8]">
+      <SiteHeader ativo="/dashboard" />
+
+      <main className="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6">
+        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-[#1e293b] sm:text-3xl">
+              Gerenciar acervo
+            </h1>
+            <p className="mt-1 text-sm text-[#64748b]">
+              {usuario ? (
+                <>
+                  Conectado como <strong className="text-[#1d4ed8]">{usuario.name}</strong> ·{" "}
+                  {usuario.role}
+                </>
+              ) : (
+                <>
+                  Você não está conectado.{" "}
+                  <Link href="/login" className="font-semibold text-[#1d4ed8] underline">
+                    Entrar
+                  </Link>
+                </>
+              )}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {usuario && (
               <button
-                onClick={handleLogout}
-                className="text-sm text-zinc-500 hover:text-red-600"
+                type="button"
+                onClick={sair}
+                className="rounded-full border border-[#e2e8f0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition hover:border-red-300 hover:text-red-600"
               >
                 Sair
               </button>
             )}
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-4 py-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-800">
-              {editingId ? "Editar Livro" : "Gerenciar Livros"}
-            </h1>
-            <p className="text-sm text-zinc-500 mt-1">
-              {editingId ? "Atualize as informações do livro" : "Adicione, edite ou remova livros do acervo"}
-            </p>
-          </div>
-          <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => {
                 if (confirm("Restaurar o acervo de exemplo? As alterações feitas aqui serão perdidas.")) {
                   resetBooks();
-                  refresh();
+                  recarregar();
                 }
               }}
-              className="px-4 py-2 rounded-lg border border-zinc-300 text-zinc-600 hover:bg-zinc-50 text-sm font-medium"
+              className="rounded-full border border-[#e2e8f0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition hover:border-[#3b82f6] hover:text-[#1d4ed8]"
             >
               Restaurar acervo
             </button>
             <button
+              type="button"
               onClick={() => {
-                setShowForm(!showForm);
-                setEditingId(null);
-                resetForm();
+                setMostrarForm(!mostrarForm);
+                setEditandoId(null);
+                limparForm();
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="rounded-full bg-[#3b82f6] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2563eb]"
             >
-              {showForm ? "Cancelar" : "+ Novo Livro"}
+              {mostrarForm ? "Cancelar" : "+ Novo livro"}
             </button>
           </div>
-        </div>
+        </header>
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-            {error}
+        {erro && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {erro}
           </div>
         )}
 
-        {showForm && (
+        {mostrarForm && (
           <form
-            onSubmit={handleSubmit}
-            className="mb-8 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm"
+            onSubmit={salvar}
+            className="mb-8 rounded-2xl border border-[#e2e8f0] bg-white p-5 shadow-sm sm:p-6"
           >
-            <h2 className="text-lg font-semibold text-zinc-800 mb-4">
-              {editingId ? "Editar Livro" : "Novo Livro"}
+            <h2 className="mb-4 text-lg font-bold text-[#1e293b]">
+              {editandoId ? "Editar livro" : "Novo livro"}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Título *
-                </label>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="sm:col-span-2 block">
+                <span className="mb-1 block text-sm font-medium text-[#334155]">Título *</span>
                 <input
                   type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-sm focus:border-[#3b82f6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/25"
                   required
                 />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Autor *
-                </label>
+              </label>
+
+              <label className="sm:col-span-2 block">
+                <span className="mb-1 block text-sm font-medium text-[#334155]">Autor *</span>
                 <input
                   type="text"
-                  value={formData.author}
-                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={form.author}
+                  onChange={(e) => setForm({ ...form, author: e.target.value })}
+                  className="w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-sm focus:border-[#3b82f6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/25"
                   required
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Categoria *
-                </label>
+              </label>
+
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-[#334155]">Categoria *</span>
                 <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-sm focus:border-[#3b82f6] focus:bg-white focus:outline-none"
                   required
                 >
-                  <option value="">Selecione uma categoria</option>
+                  <option value="">Selecione...</option>
                   {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Ano
-                </label>
+              </label>
+
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-[#334155]">
+                  Ano <span className="text-[#94a3b8]">(negativo = a.C.)</span>
+                </span>
                 <input
                   type="number"
-                  value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={form.year}
+                  onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
+                  className="w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-sm focus:border-[#3b82f6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/25"
                 />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Descrição
-                </label>
+              </label>
+
+              <label className="sm:col-span-2 block">
+                <span className="mb-1 block text-sm font-medium text-[#334155]">Descrição</span>
                 <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
                   rows={3}
+                  className="w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-sm focus:border-[#3b82f6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/25"
                 />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Capa (URL)
-                </label>
+              </label>
+
+              <label className="sm:col-span-2 block">
+                <span className="mb-1 block text-sm font-medium text-[#334155]">Capa (URL)</span>
                 <input
                   type="text"
-                  value={formData.cover}
-                  onChange={(e) => setFormData({ ...formData, cover: e.target.value })}
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={form.cover}
+                  onChange={(e) => setForm({ ...form, cover: e.target.value })}
                   placeholder="https://..."
+                  className="w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-sm focus:border-[#3b82f6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/25"
                 />
-              </div>
+              </label>
 
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Situação
-                </label>
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-[#334155]">Situação</span>
                 <select
-                  value={formData.available ? "disponivel" : "alugado"}
-                  onChange={(e) =>
-                    setFormData({ ...formData, available: e.target.value === "disponivel" })
-                  }
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  value={form.available ? "disponivel" : "alugado"}
+                  onChange={(e) => setForm({ ...form, available: e.target.value === "disponivel" })}
+                  className="w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-sm focus:border-[#3b82f6] focus:bg-white focus:outline-none"
                 >
                   <option value="disponivel">Disponível na estante</option>
                   <option value="alugado">Alugado</option>
                 </select>
-              </div>
+              </label>
 
-              {!formData.available && (
+              {!form.available && (
                 <>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  <label className="block">
+                    <span className="mb-1 block text-sm font-medium text-[#334155]">
                       Data do empréstimo
-                    </label>
+                    </span>
                     <input
                       type="text"
-                      value={formData.loanDate}
-                      onChange={(e) => setFormData({ ...formData, loanDate: e.target.value })}
-                      className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                      value={form.loanDate}
+                      onChange={(e) => setForm({ ...form, loanDate: e.target.value })}
                       placeholder="DD/MM/AAAA"
+                      className="w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-sm focus:border-[#3b82f6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/25"
                     />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-zinc-700 mb-1">
-                      Retirado por
-                    </label>
+                  </label>
+                  <label className="sm:col-span-2 block">
+                    <span className="mb-1 block text-sm font-medium text-[#334155]">Retirado por</span>
                     <input
                       type="text"
-                      value={formData.borrowedBy}
-                      onChange={(e) => setFormData({ ...formData, borrowedBy: e.target.value })}
-                      className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                      value={form.borrowedBy}
+                      onChange={(e) => setForm({ ...form, borrowedBy: e.target.value })}
                       placeholder="Ex: Sala de Leituras"
+                      className="w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-sm focus:border-[#3b82f6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/25"
                     />
-                  </div>
+                  </label>
                 </>
               )}
             </div>
-            <div className="mt-4 flex gap-3">
+
+            <div className="mt-5 flex gap-3">
               <button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
+                className="rounded-full bg-[#3b82f6] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2563eb]"
               >
-                {editingId ? "Atualizar" : "Criar Livro"}
+                {editandoId ? "Atualizar" : "Criar livro"}
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setShowForm(false);
-                  setEditingId(null);
+                  setMostrarForm(false);
+                  setEditandoId(null);
                 }}
-                className="px-4 py-2 border border-zinc-300 rounded-lg text-zinc-600 hover:bg-zinc-50"
+                className="rounded-full border border-[#e2e8f0] px-5 py-2.5 text-sm font-medium text-[#475569] transition hover:bg-[#f8fafc]"
               >
                 Cancelar
               </button>
@@ -344,64 +343,100 @@ export default function DashboardPage() {
           </form>
         )}
 
-        {books.length === 0 ? (
-          <div className="text-center py-12 text-zinc-500">
-            <p className="text-lg">Nenhum livro cadastrado ainda.</p>
-            <p className="text-sm mt-1">Clique em &quot;+ Novo Livro&quot; para adicionar.</p>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-[#64748b]">
+            <strong className="text-[#1e293b]">{filtrados.length}</strong> de {books.length} livros
+          </p>
+          <input
+            type="search"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Filtrar a lista..."
+            className="w-full max-w-xs rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm focus:border-[#3b82f6] focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/25"
+          />
+        </div>
+
+        {!pronto ? (
+          <p className="py-10 text-center text-[#94a3b8]">Carregando...</p>
+        ) : filtrados.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white py-16 text-center">
+            <p className="text-lg font-semibold text-[#475569]">Nenhum livro aqui</p>
+            <p className="mt-1 text-sm text-[#94a3b8]">Use “+ Novo livro” para adicionar.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {books.map((book) => (
-              <div key={book.id} className="border border-zinc-200 rounded-xl p-4 bg-white">
-                <div className="flex items-start gap-3">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-zinc-800">{book.title}</h3>
-                    <p className="text-sm text-zinc-500">{book.author}</p>
-                    <p className="text-xs text-zinc-400 mt-1">{book.category} • {book.year}</p>
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filtrados.map((b) => (
+              <li
+                key={b.id}
+                className="flex gap-3 rounded-xl border border-[#e2e8f0] bg-white p-3 shadow-sm"
+              >
+                <img
+                  src={b.cover}
+                  alt=""
+                  className="h-24 w-16 shrink-0 rounded-lg bg-[#e2e8f0] object-cover"
+                />
+
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-semibold text-[#1e293b]">{b.title}</h3>
+                      <p className="truncate text-xs text-[#64748b]">{b.author}</p>
+                      <p className="mt-0.5 text-[11px] text-[#94a3b8]">
+                        {b.category} · {formatYear(b.year)}
+                      </p>
+                    </div>
+
+                    <div className="flex shrink-0 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => editar(b)}
+                        title="Editar"
+                        aria-label={`Editar ${b.title}`}
+                        className="rounded-lg p-2 text-[#3b82f6] transition hover:bg-[#eff6ff]"
+                      >
+                        <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-7.071 7.071a2 2 0 01-2.828-2.828l7.071-7.071z" />
+                          <path d="M3 15a2 2 0 012-2h2l-4 4v-2z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => excluir(b.id)}
+                        title="Excluir"
+                        aria-label={`Excluir ${b.title}`}
+                        className="rounded-lg p-2 text-red-500 transition hover:bg-red-50"
+                      >
+                        <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm0 6a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
                     <span
-                      className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full ${
-                        book.available
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        b.available
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-amber-100 text-amber-800"
                       }`}
                     >
-                      {book.available ? "Disponível" : "Alugado"}
+                      {b.available ? "Disponível" : "Alugado"}
                     </span>
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => handleEdit(book)}
-                      className="p-1 hover:bg-blue-100 rounded text-blue-600"
-                      title="Editar"
+                    {!b.available && b.loanDate && (
+                      <span className="text-[10px] text-amber-700">Empréstimo: {b.loanDate}</span>
+                    )}
+                    <Link
+                      href={`/catalog/${b.id}`}
+                      className="ml-auto text-xs font-semibold text-[#1d4ed8] hover:underline"
                     >
-                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 012.828 0l.707.707a2 2 0 010 2.828l-7.071 7.071a8 8 0 11-1.414-1.414l7.071-7.071a2 2 0 010-2.828l-.707-.707zM6.586 6.586a2 2 0 012.828 0l3.536 3.536a2 2 0 010 2.828l-7.071 7.071a8 8 0 11-1.414-1.414l7.071-7.071a2 2 0 010-2.828l-.707-.707z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(book.id)}
-                      className="p-1 hover:bg-red-100 rounded text-red-600"
-                      title="Excluir"
-                    >
-                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h6a1 1 0 110 2H8a1 1 0 01-1-1zm0 6a1 1 0 011-1h6a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </button>
+                      Ver
+                    </Link>
                   </div>
                 </div>
-                <p className="mt-2 text-sm text-zinc-600 line-clamp-2">{book.description}</p>
-                {!book.available && (book.loanDate || book.borrowedBy) && (
-                  <p className="mt-2 text-xs text-yellow-700">
-                    {book.loanDate && <>Empréstimo: {book.loanDate} </>}
-                    {book.borrowedBy && <>· {book.borrowedBy}</>}
-                  </p>
-                )}
-                <Link href={`/catalog/${book.id}`} className="mt-2 inline-block text-sm text-blue-600 hover:underline">
-                  Ver detalhes
-                </Link>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </main>
     </div>
