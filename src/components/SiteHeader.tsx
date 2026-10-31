@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getSession, clearSession, type SessionUser } from "@/lib/store";
 
 const LINKS = [
   { label: "Início", href: "/" },
@@ -18,7 +19,20 @@ const LINKS = [
  */
 export function SiteHeader({ ativo = "" }: { ativo?: string }) {
   const [busca, setBusca] = useState("");
+  const [usuario, setUsuario] = useState<SessionUser | null>(null);
   const router = useRouter();
+
+  // A sessão vive no localStorage: lê depois de montar.
+  useEffect(() => {
+    setUsuario(getSession());
+  }, []);
+
+  const sair = () => {
+    clearSession();
+    setUsuario(null);
+    router.push("/");
+    router.refresh();
+  };
 
   const enviarBusca = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,12 +90,34 @@ export function SiteHeader({ ativo = "" }: { ativo?: string }) {
           />
         </form>
 
-        <Link
-          href="/login"
-          className="hidden shrink-0 rounded-full bg-[#3b82f6] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2563eb] sm:inline-block"
-        >
-          Entrar
-        </Link>
+        {usuario ? (
+          <div className="hidden shrink-0 items-center gap-2 sm:flex">
+            <span className="text-sm font-medium text-[#475569]">{usuario.name}</span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                usuario.role === "admin"
+                  ? "bg-[#eff6ff] text-[#1d4ed8]"
+                  : "bg-[#f1f5f9] text-[#64748b]"
+              }`}
+            >
+              {usuario.role}
+            </span>
+            <button
+              type="button"
+              onClick={sair}
+              className="text-sm text-[#94a3b8] transition hover:text-red-600"
+            >
+              Sair
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="hidden shrink-0 rounded-full bg-[#3b82f6] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2563eb] sm:inline-block"
+          >
+            Entrar
+          </Link>
+        )}
       </div>
 
       <nav className="no-scrollbar flex gap-1 overflow-x-auto border-t border-[#f1f5f9] px-4 pb-2 md:hidden">

@@ -62,6 +62,18 @@ function writeJSON(key: string, value: unknown): void {
   }
 }
 
+/**
+ * Controle de acesso na camada de dados: só administradores alteram o acervo.
+ * A interface já esconde os botões, mas a regra fica garantida aqui também —
+ * se alguém tentar mexer por fora, a operação é recusada.
+ */
+function exigirAdmin(): void {
+  const sessao = getSession();
+  if (!sessao || sessao.role !== "admin") {
+    throw new Error("Apenas administradores podem alterar o acervo.");
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* Livros                                                             */
 /* ------------------------------------------------------------------ */
@@ -124,6 +136,7 @@ export function getBooksByCategory(category: string): Book[] {
 }
 
 export function addBook(data: Omit<Book, "id" | "createdAt">): Book {
+  exigirAdmin();
   const books = getBooks();
   const newBook: Book = {
     ...data,
@@ -135,6 +148,7 @@ export function addBook(data: Omit<Book, "id" | "createdAt">): Book {
 }
 
 export function updateBook(id: string, data: Partial<Book>): Book | null {
+  exigirAdmin();
   const books = getBooks();
   const index = books.findIndex((b) => b.id === id);
   if (index === -1) return null;
@@ -145,6 +159,7 @@ export function updateBook(id: string, data: Partial<Book>): Book | null {
 }
 
 export function deleteBook(id: string): boolean {
+  exigirAdmin();
   const books = getBooks();
   const next = books.filter((b) => b.id !== id);
   if (next.length === books.length) return false;
@@ -154,6 +169,7 @@ export function deleteBook(id: string): boolean {
 
 /** Volta o acervo aos dados de exemplo. */
 export function resetBooks(): Book[] {
+  exigirAdmin();
   writeJSON(BOOKS_KEY, initialBooks);
   return [...initialBooks];
 }

@@ -131,6 +131,77 @@ export default function DashboardPage() {
     return b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q);
   });
 
+  // ---- Controle de acesso ----
+  // Só administradores gerenciam o acervo. Alunos (e visitantes sem login)
+  // não podem editar nem excluir nada.
+  const ehAdmin = usuario?.role === "admin";
+
+  if (!ehAdmin) {
+    return (
+      <div className="min-h-screen bg-[#f0f4f8]">
+        <SiteHeader ativo="/dashboard" />
+        <main className="mx-auto max-w-xl px-4 py-20 sm:px-6">
+          <div className="rounded-2xl border border-[#e2e8f0] bg-white p-8 text-center shadow-sm">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eff6ff] text-[#1d4ed8]">
+              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </span>
+
+            <h1 className="mt-4 text-2xl font-bold tracking-tight text-[#1e293b]">
+              {usuario ? "Acesso restrito" : "Entre para continuar"}
+            </h1>
+
+            <p className="mt-3 text-sm leading-relaxed text-[#64748b]">
+              {usuario ? (
+                <>
+                  Sua conta é de <strong className="text-[#1e293b]">{usuario.role}</strong>. Somente
+                  contas de <strong className="text-[#1e293b]">administrador</strong> podem
+                  cadastrar, editar ou excluir livros do acervo.
+                </>
+              ) : (
+                <>
+                  O painel de gerenciamento é exclusivo para administradores da biblioteca.
+                </>
+              )}
+            </p>
+
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              {!usuario && (
+                <Link
+                  href="/login?callbackUrl=/dashboard"
+                  className="rounded-full bg-[#3b82f6] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2563eb]"
+                >
+                  Entrar
+                </Link>
+              )}
+              {usuario && (
+                <button
+                  type="button"
+                  onClick={sair}
+                  className="rounded-full border border-[#e2e8f0] px-5 py-2.5 text-sm font-medium text-[#475569] transition hover:border-red-300 hover:text-red-600"
+                >
+                  Sair da conta
+                </button>
+              )}
+              <Link
+                href="/catalog"
+                className="rounded-full border border-[#3b82f6] px-5 py-2.5 text-sm font-semibold text-[#1d4ed8] transition hover:bg-[#3b82f6] hover:text-white"
+              >
+                Ver o catálogo
+              </Link>
+            </div>
+          </div>
+
+          <p className="mt-6 text-center text-xs text-[#94a3b8]">
+            Conta de demonstração com acesso total: <strong>admin@biblioteca.com</strong> / admin123
+          </p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f0f4f8]">
       <SiteHeader ativo="/dashboard" />

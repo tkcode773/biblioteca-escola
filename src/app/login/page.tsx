@@ -36,7 +36,8 @@ function FormularioLogin() {
       }
 
       setSession(toSessionUser(usuario));
-      router.push(destino);
+      // Alunos não gerenciam o acervo: vão direto para o catálogo.
+      router.push(usuario.role === "admin" ? destino : "/catalog");
       router.refresh();
     } catch {
       setErro("Erro ao entrar. Tente novamente.");
