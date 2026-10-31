@@ -13,11 +13,11 @@ import { initialBooks } from "@/lib/books";
 import type { Book } from "@/types/book";
 import type { UserRole } from "@/types/user";
 
-// v2: o acervo de exemplo mudou (capas corretas dos livros), então a chave foi
-// versionada. Sem isso, quem já visitou o site continuaria com o acervo antigo
-// guardado no navegador — com as capas erradas.
-const BOOKS_KEY = "biblioteca:books:v2";
-const BOOKS_KEY_ANTIGA = "biblioteca:books:v1";
+// A chave é versionada sempre que o acervo de exemplo muda (capas corrigidas,
+// títulos novos). Sem isso, quem já visitou o site continuaria com o acervo
+// antigo guardado no navegador. As chaves antigas são migradas e removidas.
+const BOOKS_KEY = "biblioteca:books:v3";
+const BOOKS_KEYS_ANTIGAS = ["biblioteca:books:v2", "biblioteca:books:v1"];
 const USERS_KEY = "biblioteca:users:v1";
 const SESSION_KEY = "biblioteca:session:v1";
 
@@ -70,21 +70,29 @@ export function getBooks(): Book[] {
   const stored = readJSON<Book[] | null>(BOOKS_KEY, null);
   if (stored && stored.length > 0) return stored;
 
-  // Primeira visita (ou migração do acervo antigo): começa do acervo de exemplo.
+  // Primeira visita (ou migração de um acervo antigo): começa do acervo de exemplo.
   // Livros que o usuário cadastrou por conta própria são preservados, mas os
   // registros antigos de exemplo são trocados pelos novos (capas corretas).
-  const antigo = readJSON<Book[] | null>(BOOKS_KEY_ANTIGA, null);
   const idsDoExemplo = new Set(initialBooks.map((b) => b.id));
-  const adicionadosPeloUsuario = (antigo ?? []).filter((b) => !idsDoExemplo.has(b.id));
+  const adicionadosPeloUsuario: Book[] = [];
+
+  for (const chaveAntiga of BOOKS_KEYS_ANTIGAS) {
+    const antigo = readJSON<Book[] | null>(chaveAntiga, null);
+    for (const b of antigo ?? []) {
+      if (!idsDoExemplo.has(b.id)) adicionadosPeloUsuario.push(b);
+    }
+  }
 
   const acervo = [...initialBooks, ...adicionadosPeloUsuario];
   writeJSON(BOOKS_KEY, acervo);
 
   if (hasStorage()) {
-    try {
-      window.localStorage.removeItem(BOOKS_KEY_ANTIGA);
-    } catch {
-      /* ignora */
+    for (const chaveAntiga of BOOKS_KEYS_ANTIGAS) {
+      try {
+        window.localStorage.removeItem(chaveAntiga);
+      } catch {
+        /* ignora */
+      }
     }
   }
 
