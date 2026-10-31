@@ -14,26 +14,26 @@ type Integrante = {
 const EQUIPE: Integrante[] = [
   {
     nome: "Manoel Carlos",
-    funcao: "Front-end e design",
-    bio: "Responsável pelas telas, pela identidade visual e pela experiência de quem usa o site.",
+    funcao: "Front-end, design e desenvolvimento",
+    bio: "Implementação das telas, identidade visual do site, catálogo, painel de gerenciamento e publicação.",
     cor: "#3b82f6",
   },
   {
     nome: "Victor Gabriel",
-    funcao: "Back-end e dados",
-    bio: "Cuida do acervo, das regras de empréstimo e da estrutura de dados da biblioteca.",
+    funcao: "Requisitos e escopo",
+    bio: "Levantamento dos requisitos do projeto e definição do que a biblioteca deveria entregar.",
     cor: "#0ea5e9",
   },
   {
     nome: "Bárbara Rafaely",
-    funcao: "Interface e testes",
-    bio: "Revisa a usabilidade das telas e testa as funcionalidades antes de cada entrega.",
+    funcao: "Pesquisa e revisão",
+    bio: "Pesquisa de referências, revisão do conteúdo e conferência das regras de acesso.",
     cor: "#6366f1",
   },
   {
     nome: "Gustavo Fernandes",
-    funcao: "Documentação e apresentação",
-    bio: "Organiza a documentação do projeto e prepara a apresentação para a banca.",
+    funcao: "Desenvolvimento e testes",
+    bio: "Apoio na implementação das funcionalidades e nos testes do site antes da entrega.",
     cor: "#8b5cf6",
   },
 ];
